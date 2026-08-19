@@ -67,8 +67,9 @@
             <span class="brand-name">Kasuwa</span>
           </a>
           <div class="search-box" id="globalSearchWrap">
-            <span class="search-ic" data-icon="search"></span>
+            <button class="search-toggle" id="searchToggle" aria-label="Search stocks"><span data-icon="search"></span></button>
             <input id="globalSearch" type="text" placeholder="Search stocks e.g. Dangote, GTCO…" autocomplete="off" />
+            <button class="search-close" id="searchClose" aria-label="Close search" hidden><span data-icon="x"></span></button>
           </div>
         </div>
         <div class="topbar-right">
@@ -77,6 +78,9 @@
             <span class="dot" id="notifDot"></span>
           </button>
           <button class="chip-chip" id="marketStatusChip"><span class="pulse"></span> Market open</button>
+          <button class="profile-btn" id="profileBtn" title="Profile & settings" aria-label="Profile & settings">
+            <span class="profile-avatar" id="profileAvatar">AA</span>
+          </button>
         </div>
       </header>
 
@@ -88,6 +92,7 @@
       <div class="view" id="view-learn"></div>
       <div class="view" id="view-stock"></div>
       <div class="view" id="view-lesson"></div>
+      <div class="view" id="view-profile"></div>
     </main>
 
     <!-- Bottom nav (mobile) -->
@@ -223,6 +228,7 @@
     </section>
   </div>
 
+  <script src="assets/vendor/lightweight-charts.standalone.production.js"></script>
   <script src="js/data.js"></script>
   <script src="js/charts.js"></script>
   <script src="js/app.js"></script>

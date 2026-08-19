@@ -685,3 +685,96 @@ canvas{display:block;max-width:100%}
 .lt-check{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;background:var(--green-bg);color:var(--green-2);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
 .lt-check .ic{width:16px;height:16px}
 .lesson-thumb{min-height:130px}
+
+/* =========================================================
+   REAL LOGOS + PROFILE + SEARCH + LIGHT THEME
+   ========================================================= */
+
+/* ---- Real company logos in badges ---- */
+.ticker-badge{position:relative;overflow:hidden}
+.stock-logo{position:relative;overflow:hidden}
+.tk-logo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff;padding:16%;border-radius:inherit;box-sizing:border-box}
+
+/* ---- Expandable search ---- */
+.search-box{display:flex;align-items:center;gap:4px;flex:none;max-width:none;background:transparent;border:none;padding:0;position:relative}
+.search-toggle{width:42px;height:42px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:13px;transition:all .15s}
+.search-toggle:hover{color:var(--text);background:var(--surface-2)}
+.search-toggle .ic{width:19px;height:19px}
+.search-close{width:32px;height:32px;flex-shrink:0;display:none;align-items:center;justify-content:center;color:var(--muted);border-radius:9px}
+.search-close .ic{width:16px;height:16px}
+.search-close:hover{color:var(--text)}
+#globalSearch{width:0;opacity:0;padding:0;border:none;background:none;outline:none;font-size:14px;color:var(--text);transition:all .2s}
+.search-box.expanded{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:0 4px 0 10px;flex:1;max-width:420px}
+.search-box.expanded #globalSearch{width:100%;opacity:1;padding:10px 0;flex:1}
+.search-box.expanded .search-close{display:flex}
+@media (max-width:640px){
+  .search-box.expanded{position:absolute;left:10px;right:10px;top:10px;z-index:60;max-width:none}
+}
+
+/* ---- Profile button ---- */
+.profile-btn{width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;overflow:hidden;transition:all .15s;flex-shrink:0}
+.profile-btn:hover{background:var(--surface-2)}
+.profile-avatar{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent),var(--gold));color:#06211a;font-weight:700;font-size:13px}
+
+/* ---- Stock chart host ---- */
+.stock-chart-host{width:100%;min-height:360px}
+
+/* ---- Profile & settings ---- */
+.profile-hero{display:flex;align-items:center;gap:16px}
+.avatar-lg{width:64px;height:64px;border-radius:20px;font-size:22px}
+.profile-name{font-size:19px;font-weight:700;font-family:var(--font-display)}
+.settings-list{display:flex;flex-direction:column;padding:6px}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 12px}
+.setting-row + .setting-row{border-top:1px solid var(--border)}
+.setting-label{font-size:14px;font-weight:600}
+.setting-desc{font-size:12px;color:var(--muted);margin-top:2px}
+.switch{position:relative;width:46px;height:26px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0;position:absolute}
+.slider{position:absolute;cursor:pointer;inset:0;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;transition:.2s}
+.slider::before{content:"";position:absolute;height:20px;width:20px;left:2px;top:2px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.switch input:checked + .slider{background:linear-gradient(135deg,var(--accent),#0d9488);border-color:transparent}
+.switch input:checked + .slider::before{transform:translateX(20px)}
+.setting-select{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;cursor:pointer;max-width:160px}
+.setting-select option{color:#0e1524}
+.more-row{cursor:pointer;transition:background .12s}
+.more-row:hover{background:var(--surface)}
+.more-ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--surface-2);color:var(--muted);flex-shrink:0}
+.more-ic .ic{width:18px;height:18px}
+.more-arrow{color:var(--muted-2);display:flex}
+.more-arrow .ic{width:16px;height:16px}
+.logout-btn{margin-top:24px;color:var(--red);border-color:rgba(244,63,94,.3)}
+.logout-btn:hover{background:var(--red-bg);color:var(--red)}
+
+/* =========================================================
+   LIGHT THEME
+   ========================================================= */
+body.light{
+  --bg:#eef1f7;
+  --bg-2:#e6eaf3;
+  --surface:rgba(255,255,255,.72);
+  --surface-2:rgba(15,23,42,.06);
+  --surface-strong:rgba(255,255,255,.94);
+  --border:rgba(15,23,42,.1);
+  --border-strong:rgba(15,23,42,.18);
+  --text:#0e1524;
+  --muted:#55647d;
+  --muted-2:#8b98ad;
+  --green:#16a34a; --green-2:#15803d; --green-bg:rgba(22,163,74,.12);
+  --red:#e11d48; --red-bg:rgba(225,29,72,.12);
+  --gold:#d97706; --gold-2:#b45309;
+  --accent:#0d9488; --accent-2:#0f766e;
+  --shadow:0 20px 40px -18px rgba(15,23,42,.16);
+}
+body.light .bg{background:radial-gradient(120% 80% at 50% -10%,#e7edf7 0%,var(--bg) 55%)}
+body.light .bg-orb-1{opacity:.32}
+body.light .bg-orb-2{opacity:.28}
+body.light .bg-orb-3{opacity:.22}
+body.light .bg-grid{background-image:linear-gradient(rgba(15,23,42,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(15,23,42,.045) 1px,transparent 1px)}
+body.light .topbar{background:linear-gradient(to bottom,rgba(238,241,247,.92),rgba(238,241,247,.6))}
+body.light .sidebar{background:rgba(255,255,255,.55)}
+body.light .bottomnav{background:rgba(255,255,255,.82)}
+body.light .bn-trade-btn{border-color:rgba(255,255,255,.9)}
+body.light .chip-chip{background:var(--green-bg);border-color:rgba(22,163,74,.25);color:var(--green-2)}
+body.light .icon-btn .dot{box-shadow:0 0 0 3px var(--bg)}
+body.light .slider::before{background:#fff}
+body.light .tk-logo{background:#fff}

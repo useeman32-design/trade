@@ -54,7 +54,12 @@ function drawSparksInView(){
 
 /* ---------------- State ---------------- */
 const LS_KEY = "kasuwa_state_v1";
-const DEFAULT_STATE = { cash: 500000, positions: {}, watchlist: ["DANGCEM","GTCO","MTNN"], txns: [], completedLessons: [], onboarded: false, name: "Amina", equityHistory: [] };
+const DEFAULT_STATE = {
+  cash: 500000, positions: {}, watchlist: ["DANGCEM","GTCO","MTNN"], txns: [],
+  completedLessons: [], onboarded: false, name: "Amina", email: "amina@kasuwa.ng",
+  settings: { dark: true, notifications: true, priceAlerts: false, language: "English", currency: "NGN" },
+  equityHistory: []
+};
 let state = loadState();
 
 function loadState(){
@@ -96,7 +101,7 @@ function toast(title, sub, type="success"){
 }
 
 /* ---------------- Router ---------------- */
-const VIEWS = ["home","markets","trade","portfolio","learn","stock","lesson"];
+const VIEWS = ["home","markets","trade","portfolio","learn","stock","lesson","profile"];
 let currentStock = null;
 
 function navigate(){
@@ -118,22 +123,23 @@ function highlightNav(view){
   document.querySelectorAll("[data-nav]").forEach(a=>{
     a.classList.toggle("active", a.dataset.view === main);
   });
-  // keep bottom nav Trade highlighted when in stock detail? no — highlight markets for stock.
 }
 
 function renderView(view, arg){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
-  const map = { home:"view-home", markets:"view-markets", trade:"view-trade", portfolio:"view-portfolio", learn:"view-learn", stock:"view-stock", lesson:"view-lesson" };
+  const map = { home:"view-home", markets:"view-markets", trade:"view-trade", portfolio:"view-portfolio", learn:"view-learn", stock:"view-stock", lesson:"view-lesson", profile:"view-profile" };
   const el = document.getElementById(map[view]||"view-home");
   el.classList.add("active");
-  const renderers = { home:renderHome, markets:renderMarkets, trade:renderTrade, portfolio:renderPortfolio, learn:renderLearn, stock:()=>renderStock(currentStock), lesson:()=>renderLesson(arg) };
+  const renderers = { home:renderHome, markets:renderMarkets, trade:renderTrade, portfolio:renderPortfolio, learn:renderLearn, stock:()=>renderStock(currentStock), lesson:()=>renderLesson(arg), profile:renderProfile };
   (renderers[view]||renderHome)();
   injectIcons(el);
 }
 
 /* ---------------- Shared stock row helpers ---------------- */
 function tickerBadge(s, size){
-  return `<div class="ticker-badge" style="background:linear-gradient(135deg,${s.color},${s.color}aa)">${s.sym.slice(0,4)}</div>`;
+  const init = s.sym.slice(0,4);
+  const img = s.logo ? `<img src="${s.logo}" class="tk-logo" alt="${s.name}" loading="lazy" onerror="this.remove()" />` : "";
+  return `<div class="ticker-badge" style="background:linear-gradient(135deg,${s.color},${s.color}aa)">${init}${img}</div>`;
 }
 function stockRowHTML(s, {showSector=true}={}){
   const chg = pctChange(s.sym);
@@ -381,7 +387,7 @@ function renderStock(sym){
 
     <div class="stock-head" style="margin-top:10px">
       <div class="stock-ident">
-        <div class="stock-logo" style="background:linear-gradient(135deg,${s.color},${s.color}88)">${s.sym.slice(0,4)}</div>
+        <div class="stock-logo" style="background:linear-gradient(135deg,${s.color},${s.color}88)">${s.sym.slice(0,4)}${s.logo?`<img src="${s.logo}" class="tk-logo" alt="${s.name}" onerror="this.remove()" />`:""}</div>
         <div>
           <div class="stock-name">${s.name}</div>
           <div class="stock-symline">${s.sym} · ${s.sector} ${s.shariah?'<span class="tag halal">${icon("shield")} Halal</span>':""}</div>
@@ -407,9 +413,7 @@ function renderStock(sym){
         </div>
       </div>
       <div class="card chart-wrap" style="margin-top:12px;position:relative">
-        <canvas class="chart-canvas" id="stockChart"></canvas>
-        <canvas class="crosshair-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
-        <div class="chart-tooltip" id="chartTooltip"></div>
+        <div id="stockChart" class="stock-chart-host"></div>
       </div>
     </div>
 
@@ -466,20 +470,17 @@ function bindStockDetail(sym){
 }
 
 function drawStockChart(sym){
-  const c = document.getElementById("stockChart");
-  if(!c) return;
+  const host = document.getElementById("stockChart");
+  if(!host) return;
   const data = HISTORY[sym][stockTF];
-  const up = pctChange(sym)>=0;
-  const color = up ? "#22c55e" : "#f43f5e";
-  let meta;
-  if(stockMode==="candles") meta = ChartEngine.drawCandles(c, data, {});
-  else meta = ChartEngine.drawArea(c, data, { up, color });
-
-  const tip = document.getElementById("chartTooltip");
-  ChartEngine.attachCrosshair(c, tip, ()=>meta, (v,idx)=>{
-    const t = TIMEFRAMES[stockTF].interval;
-    return `<div style="font-weight:600">${stockMode==="candles" ? `${fmtN(v.c)}` : `${fmtN(v)}`}</div><div class="muted" style="font-size:11px">${stockMode==="candles"? `O ${fmtN(v.o)} · H ${fmtN(v.h)} · L ${fmtN(v.l)} · C ${fmtN(v.c)}`:""}</div>`;
-  });
+  const chart = ChartEngine.drawMainChart(host, data, stockMode);
+  // fallback to canvas engine if lightweight-charts hasn't loaded
+  if(!chart){
+    host.innerHTML = '<canvas class="chart-canvas" id="stockChartCanvas"></canvas>';
+    const c = document.getElementById("stockChartCanvas");
+    if(stockMode==="candles") ChartEngine.drawCandles(c, data, {});
+    else ChartEngine.drawArea(c, data, { up:true, color:"#22c55e" });
+  }
 }
 
 /* =========================================================
@@ -1141,19 +1142,156 @@ function setupStartFlow(){
 }
 
 /* =========================================================
+   PROFILE & SETTINGS
+   ========================================================= */
+function userInitials(){
+  return (state.name||"A").trim().split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase() || "AA";
+}
+function applyTheme(){
+  document.body.classList.toggle("light", state.settings.dark === false);
+  document.body.classList.toggle("dark", state.settings.dark !== false);
+}
+function switchRow(label, desc, key){
+  const checked = !!state.settings[key];
+  return `<div class="setting-row">
+    <div class="setting-info"><div class="setting-label">${label}</div>${desc?`<div class="setting-desc">${desc}</div>`:""}</div>
+    <label class="switch"><input type="checkbox" data-key="${key}" ${checked?"checked":""} /><span class="slider"></span></label>
+  </div>`;
+}
+function selectRow(label, key, options){
+  return `<div class="setting-row">
+    <div class="setting-info"><div class="setting-label">${label}</div></div>
+    <select class="setting-select" data-key="${key}">
+      ${options.map(o=>`<option value="${o}" ${state.settings[key]===o?"selected":""}>${o}</option>`).join("")}
+    </select>
+  </div>`;
+}
+
+function renderProfile(){
+  const pf = computePortfolio();
+  const s = state.settings;
+  const initials = userInitials();
+  document.getElementById("view-profile").innerHTML = `
+    <div class="page-head">
+      <div><div class="page-title">Profile</div><div class="page-sub">Your account &amp; settings</div></div>
+    </div>
+
+    <div class="card glass profile-hero">
+      <div class="avatar avatar-lg">${initials}</div>
+      <div style="flex:1;min-width:0">
+        <div class="profile-name">${state.name}</div>
+        <div class="muted" style="font-size:13px">${state.email}</div>
+        <span class="tag" style="margin-top:8px">${icon("shield")} Paper account · Demo</span>
+      </div>
+      <button class="icon-btn" id="editProfileBtn" title="Edit profile">${icon("plus")}</button>
+    </div>
+
+    <div class="stat-strip" style="margin-top:16px">
+      <div class="glass mini-stat"><span class="k">Balance</span><span class="v">${fmtN0(pf.totalValue)}</span></div>
+      <div class="glass mini-stat"><span class="k">Positions</span><span class="v">${pf.holdings.length}</span></div>
+      <div class="glass mini-stat"><span class="k">Lessons done</span><span class="v">${state.completedLessons.length}/${LESSONS.length}</span></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Settings</div>
+      <div class="card glass settings-list">
+        ${switchRow("Dark mode", "Switch between dark and light theme", "dark")}
+        ${switchRow("Notifications", "Market updates and price alerts", "notifications")}
+        ${switchRow("Price alerts", "Notify me when a watched stock moves 5%", "priceAlerts")}
+        ${selectRow("Language", "language", ["English","Hausa"])}
+        ${selectRow("Currency", "currency", ["NGN (₦)","USD ($)"])}
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">More</div>
+      <div class="card glass settings-list">
+        ${moreRow("info", "About Kasuwa")}
+        ${moreRow("help", "Help & support")}
+        ${moreRow("shield", "Privacy policy")}
+        ${moreRow("file", "Terms of service")}
+      </div>
+    </div>
+
+    <button class="btn btn-ghost btn-block logout-btn" id="logoutBtn">${icon("x")} Log out</button>
+  `;
+
+  // toggles + selects
+  document.getElementById("view-profile").querySelectorAll(".setting-row input[type=checkbox]").forEach(cb=>{
+    cb.addEventListener("change", ()=>{
+      const key = cb.dataset.key;
+      state.settings[key] = cb.checked;
+      saveState();
+      if(key==="dark"){ applyTheme(); navigate(); }
+      else toast("Setting updated", key);
+    });
+  });
+  document.getElementById("view-profile").querySelectorAll(".setting-select").forEach(sel=>{
+    sel.addEventListener("change", ()=>{
+      state.settings[sel.dataset.key] = sel.value;
+      saveState();
+      toast("Setting updated", sel.dataset.key);
+    });
+  });
+  document.getElementById("view-profile").querySelectorAll("[data-more]").forEach(el=>{
+    el.addEventListener("click", ()=>{ toast("Coming soon", el.dataset.more + " page is under construction"); });
+  });
+  document.getElementById("editProfileBtn").addEventListener("click", ()=>{
+    const name = prompt("Enter your name:", state.name);
+    if(name && name.trim()){ state.name = name.trim(); saveState(); renderProfile(); updateUserUI(); toast("Profile updated", name); }
+  });
+  document.getElementById("logoutBtn").addEventListener("click", ()=>{
+    state.onboarded = false; saveState();
+    location.reload();
+  });
+}
+function moreRow(ic, label){
+  return `<div class="setting-row more-row" data-more="${ic}">
+    <span class="more-ic">${icon(ic)}</span>
+    <div class="setting-info"><div class="setting-label">${label}</div></div>
+    <span class="more-arrow">${icon("chevronRight")}</span>
+  </div>`;
+}
+function updateUserUI(){
+  const ini = userInitials();
+  const av = document.getElementById("profileAvatar"); if(av) av.textContent = ini;
+  const sa = document.getElementById("sideAvatar"); if(sa) sa.textContent = ini;
+  const sn = document.getElementById("sideUserName"); if(sn) sn.textContent = state.name;
+}
+
+/* =========================================================
    Global search + tick loop + init
    ========================================================= */
 function setupGlobalSearch(){
+  const wrap = document.getElementById("globalSearchWrap");
+  const toggle = document.getElementById("searchToggle");
+  const close = document.getElementById("searchClose");
   const input = document.getElementById("globalSearch");
   let dd = null;
+
+  function expand(){
+    wrap.classList.add("expanded");
+    close.hidden = false;
+    setTimeout(()=>input.focus(), 60);
+  }
+  function collapse(){
+    wrap.classList.remove("expanded");
+    close.hidden = true;
+    input.value = "";
+    if(dd) dd.style.display = "none";
+    input.blur();
+  }
+
+  toggle.addEventListener("click", ()=>{ wrap.classList.contains("expanded") ? collapse() : expand(); });
+  close.addEventListener("click", collapse);
+
   input.addEventListener("input", ()=>{
     const q = input.value.toLowerCase().trim();
     if(!dd){
       dd = document.createElement("div");
       dd.className = "search-dropdown glass-strong";
-      dd.style.cssText = "position:absolute;top:52px;left:0;right:0;z-index:90;border-radius:14px;padding:6px;max-height:340px;overflow-y:auto;display:none";
-      input.parentElement.style.position = "relative";
-      input.parentElement.appendChild(dd);
+      dd.style.cssText = "position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:90;border-radius:14px;padding:6px;max-height:340px;overflow-y:auto;display:none;background:var(--surface-strong);border:1px solid var(--border-strong);backdrop-filter:blur(20px)";
+      wrap.appendChild(dd);
     }
     if(!q){ dd.style.display="none"; return; }
     const matches = STOCKS.filter(s=>s.name.toLowerCase().includes(q)||s.sym.toLowerCase().includes(q)).slice(0,8);
@@ -1163,9 +1301,13 @@ function setupGlobalSearch(){
         <div style="text-align:right"><div style="font-weight:600;font-size:13.5px">${fmtN(PRICES[s.sym])}</div></div>
       </div>`).join("") : '<div class="muted" style="padding:14px;text-align:center;font-size:13px">No stocks found</div>';
     dd.style.display = "block";
-    dd.querySelectorAll("[data-sym]").forEach(el=>el.addEventListener("click", ()=>{ input.value=""; dd.style.display="none"; location.hash="#/stock/"+el.dataset.sym; }));
+    dd.querySelectorAll("[data-sym]").forEach(el=>el.addEventListener("click", ()=>{ collapse(); location.hash="#/stock/"+el.dataset.sym; }));
   });
-  input.addEventListener("blur", ()=>{ setTimeout(()=>{ if(dd) dd.style.display="none"; }, 150); });
+
+  input.addEventListener("keydown", e=>{ if(e.key==="Escape") collapse(); });
+  document.addEventListener("click", e=>{
+    if(!wrap.contains(e.target) && wrap.classList.contains("expanded")) collapse();
+  });
 }
 
 function updateSideBalance(){
@@ -1177,7 +1319,15 @@ function tickLoop(){
   liveTick();
   updateSideBalance();
   const view = (location.hash||"#/home").replace(/^#\//,"").split("/")[0];
-  // gentle periodic refresh so prices feel live without disrupting scroll
+  // live-update the open chart's last candle without rebuilding
+  if(view==="stock" && currentStock){
+    if(stockTF === "1D"){
+      const arr = HISTORY[currentStock]["1D"];
+      ChartEngine.updateLastBar(arr[arr.length-1]);
+    }
+    updateStockHeader(currentStock);
+  }
+  // gentle periodic refresh of list views so prices feel live without disrupting scroll
   if(tickSeq % 10 === 0){
     const y = window.scrollY;
     if(view==="markets") renderMarkets();
@@ -1185,7 +1335,16 @@ function tickLoop(){
     else if(view==="home") renderHome();
     window.scrollTo(0, y);
   }
-  if(view==="stock" && currentStock) drawStockChart(currentStock);
+}
+
+function updateStockHeader(sym){
+  const s = stockBySym(sym);
+  if(!s) return;
+  const price = PRICES[sym], chg = pctChange(sym), up = chg>=0;
+  const pEl = document.querySelector("#view-stock .price-big");
+  if(pEl){ pEl.textContent = fmtN(price); pEl.className = "price-big " + (up?"up":"down"); }
+  const cEl = document.querySelector("#view-stock .price-chg");
+  if(cEl){ cEl.innerHTML = `${up?"▲":"▼"} ${fmtPct(chg)} <span class="muted" style="font-weight:400">today</span>`; cEl.className = "price-chg " + (up?"up":"down"); }
 }
 
 function init(){
@@ -1209,6 +1368,11 @@ function init(){
     toast("Market update", "NGX All-Share Index +0.61% today. 17 gainers vs 38 losers.");
   });
 
+  // profile
+  document.getElementById("profileBtn").addEventListener("click", ()=>{ location.hash = "#/profile"; });
+
+  applyTheme();
+  updateUserUI();
   setupGlobalSearch();
   updateSideBalance();
 

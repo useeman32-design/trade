@@ -42,22 +42,34 @@ const STOCKS = [
   { sym:"DANGSUGAR", name:"Dangote Sugar",   sector:"Consumer",    price:42.50, prevClose:41.80, mcap:"₦0.5tn", vol:"11.3m", pe:9.5, div:4.6, high52:48, low52:30, shariah:true,  color:"#f472b6", about:"Dangote Sugar Refinery is the country's largest sugar producer, central to the Dangote group's backward-integration strategy." },
 ];
 
+// ---- Real company logos (downloaded favicons; null → styled initials) ----
+const LOGOS = {
+  DANGCEM:"assets/logos/DANGCEM.png", MTNN:"assets/logos/MTNN.png", BUAFOODS:"assets/logos/BUAFOODS.png",
+  AIRTELAFRI:"assets/logos/AIRTELAFRI.png", GTCO:"assets/logos/GTCO.png", ZENITHBANK:"assets/logos/ZENITHBANK.png",
+  BUACEMENT:"assets/logos/BUACEMENT.png", SEPLAT:"assets/logos/SEPLAT.png", WAPCO:"assets/logos/WAPCO.png",
+  FBNH:"assets/logos/FBNH.png", UBA:"assets/logos/UBA.png", ACCESSCORP:"assets/logos/ACCESSCORP.png",
+  WEMABANK:"assets/logos/WEMABANK.png", FIDELITYBK:"assets/logos/FIDELITYBK.png", OANDO:"assets/logos/OANDO.png",
+  TRANSCORP:"assets/logos/TRANSCORP.png", NESTLE:"assets/logos/NESTLE.png", DANGSUGAR:"assets/logos/DANGSUGAR.png",
+};
+
 // ---- Generate deterministic history for each stock ----
 const HISTORY = {};
 const TIMEFRAMES = {
-  "1D":  { points: 96,  interval: "5m" },
-  "1W":  { points: 84,  interval: "1h" },
-  "1M":  { points: 30,  interval: "1d" },
-  "3M":  { points: 66,  interval: "1d" },
-  "1Y":  { points: 52,  interval: "1w" },
+  "1D":  { points: 96,  step: 300,    label:"5m" },
+  "1W":  { points: 84,  step: 3600,   label:"1h" },
+  "1M":  { points: 30,  step: 86400,  label:"1d" },
+  "3M":  { points: 66,  step: 86400,  label:"1d" },
+  "1Y":  { points: 52,  step: 604800, label:"1w" },
 };
 
 function generateOHLC(sym){
   const s = STOCKS.find(x=>x.sym===sym);
   const rnd = mulberry32(hashSeed(sym));
   const data = {};
+  const endTime = Math.floor(Date.now()/1000);
   for(const tf in TIMEFRAMES){
     const n = TIMEFRAMES[tf].points;
+    const step = TIMEFRAMES[tf].step;
     const arr = [];
     const target = s.price;
     // start price: a plausible distance from current price depending on horizon
@@ -85,14 +97,14 @@ function generateOHLC(sym){
       const high = Math.max(open,close) + spread*rnd();
       const low = Math.min(open,close) - spread*rnd();
       const volume = Math.round((s.vol ? parseFloat(s.vol)*1e6 : 2e6) * (0.4+rnd()*1.3));
-      arr.push({ o:+open.toFixed(2), h:+high.toFixed(2), l:+low.toFixed(2), c:+close.toFixed(2), v:volume });
+      arr.push({ time: endTime - (n-1-i)*step, o:+open.toFixed(2), h:+high.toFixed(2), l:+low.toFixed(2), c:+close.toFixed(2), v:volume });
       price = close;
     }
     data[tf] = arr;
   }
   return data;
 }
-STOCKS.forEach(s => { HISTORY[s.sym] = generateOHLC(s.sym); });
+STOCKS.forEach(s => { s.logo = LOGOS[s.sym] || null; HISTORY[s.sym] = generateOHLC(s.sym); });
 
 // ---- Live price engine ----
 const PRICES = {};

@@ -184,5 +184,75 @@ const ChartEngine = (() => {
     return `rgba(${r},${g},${b},${a})`;
   }
 
-  return { drawArea, drawCandles, drawSpark, attachCrosshair, setupCanvas, hexA };
+  // ---- TradingView Lightweight Charts (professional main chart) ----
+  let _lwChart = null, _lwSeries = null, _lwVolSeries = null, _lwMode = null;
+  function destroyMainChart(){
+    if(_lwChart){ try{ _lwChart.remove(); }catch(e){} _lwChart = null; }
+    _lwSeries = null; _lwVolSeries = null; _lwMode = null;
+  }
+  function isLight(){ return document.body.classList.contains("light"); }
+
+  function drawMainChart(container, data, mode){
+    const LC = window.LightweightCharts;
+    if(!LC){ return null; } // library not loaded
+    destroyMainChart();
+    container.innerHTML = "";
+    const light = isLight();
+    const chart = LC.createChart(container, {
+      height: 360,
+      layout: { background:{ type:'solid', color:'transparent' }, textColor: light?'#5a6a85':'#93a0b4', fontSize:11, fontFamily:'Inter, sans-serif' },
+      grid: { vertLines:{ color: light?'rgba(15,23,42,0.05)':'rgba(255,255,255,0.04)' }, horzLines:{ color: light?'rgba(15,23,42,0.05)':'rgba(255,255,255,0.04)' } },
+      crosshair: { mode: LC.CrosshairMode.Normal, vertLine:{ labelBackgroundColor:'#10b981' }, horzLine:{ labelBackgroundColor:'#10b981' } },
+      rightPriceScale: { borderColor: light?'rgba(15,23,42,0.12)':'rgba(255,255,255,0.1)' },
+      timeScale: { borderColor: light?'rgba(15,23,42,0.12)':'rgba(255,255,255,0.1)', timeVisible:true, secondsVisible:false, rightOffset:2 },
+      handleScroll: { vertTouchDrag:false, horzTouchDrag:true },
+      handleScale: true,
+    });
+    _lwChart = chart;
+
+    const seriesOpts = { priceFormat:{ type:'price', precision:2, minMove:0.01 } };
+    if(mode === "candles"){
+      const cs = chart.addCandlestickSeries(Object.assign({
+        upColor:'#22c55e', downColor:'#f43f5e', borderUpColor:'#22c55e', borderDownColor:'#f43f5e',
+        wickUpColor:'#22c55e', wickDownColor:'#f43f5e'
+      }, seriesOpts));
+      cs.setData(data.map(d=>({ time:d.time, open:d.o, high:d.h, low:d.l, close:d.c })));
+      _lwSeries = cs;
+    } else {
+      const as = chart.addAreaSeries(Object.assign({
+        lineColor:'#22c55e', topColor:'rgba(34,197,94,0.28)', bottomColor:'rgba(34,197,94,0)',
+        lineWidth:2
+      }, seriesOpts));
+      as.setData(data.map(d=>({ time:d.time, value:d.c })));
+      _lwSeries = as;
+    }
+
+    // volume histogram on a compressed bottom scale
+    const vol = chart.addHistogramSeries({ priceFormat:{ type:'volume' }, priceScaleId:'' });
+    vol.priceScale().applyOptions({ scaleMargins:{ top:0.82, bottom:0 } });
+    vol.setData(data.map(d=>({
+      time:d.time, value:d.v,
+      color: d.c>=d.o ? (light?'rgba(22,163,74,0.30)':'rgba(34,197,94,0.32)') : (light?'rgba(225,29,72,0.30)':'rgba(244,63,94,0.32)')
+    })));
+    _lwVolSeries = vol;
+    _lwMode = mode;
+
+    chart.timeScale().fitContent();
+    return chart;
+  }
+
+  // update the last bar in-place (live tick) instead of rebuilding
+  function updateLastBar(d){
+    if(!_lwSeries || !d) return;
+    if(_lwMode === "candles"){
+      _lwSeries.update({ time:d.time, open:d.o, high:d.h, low:d.l, close:d.c });
+    } else {
+      _lwSeries.update({ time:d.time, value:d.c });
+    }
+    if(_lwVolSeries){
+      _lwVolSeries.update({ time:d.time, value:d.v, color: d.c>=d.o ? 'rgba(34,197,94,0.32)' : 'rgba(244,63,94,0.32)' });
+    }
+  }
+
+  return { drawArea, drawCandles, drawSpark, attachCrosshair, setupCanvas, hexA, drawMainChart, destroyMainChart, updateLastBar };
 })();
