@@ -56,7 +56,7 @@ function drawSparksInView(){
 const LS_KEY = "kasuwa_state_v1";
 const DEFAULT_STATE = {
   cash: 500000, positions: {}, watchlist: ["DANGCEM","GTCO","MTNN"], txns: [],
-  completedLessons: [], onboarded: false, name: "Amina", email: "amina@kasuwa.ng",
+  completedLessons: [], onboarded: false, name: "Amina", email: "amina@stocksx.ng",
   settings: { dark: true, notifications: true, priceAlerts: false, language: "English", currency: "NGN" },
   equityHistory: []
 };
@@ -170,6 +170,11 @@ function renderHome(){
   const dayUp = pf.dayPnl>=0;
 
   document.getElementById("view-home").innerHTML = `
+    <div class="mkt-status-row">
+      <span class="chip-chip"><span class="pulse"></span> Market open</span>
+      <span class="mkt-hours">NGX · Mon–Fri 9:30–14:30 WAT</span>
+    </div>
+
     <div class="greeting">Barka da zuwa, <strong style="color:var(--text)">${state.name}</strong> 👋</div>
 
     <div class="balance-hero" style="margin-top:14px">
@@ -179,7 +184,7 @@ function renderHome(){
         <div class="balance-delta ${dayUp?"up":"down"}">${dayUp?"▲":"▼"} ${fmtN0(pf.dayPnl)} today · ${fmtPct(pf.totalValue>0?(pf.totalPnl/(pf.totalValue-pf.totalPnl||1))*100:0)} all-time</div>
         <div class="balance-sub">Cash ${fmtN0(pf.cash)} · Invested ${fmtN0(pf.marketValue)}</div>
         <div class="quick-actions">
-          <button class="btn btn-ghost btn-sm" data-act="deposit">${icon("plus")} Add funds</button>
+          <button class="btn btn-ghost btn-sm" data-act="deposit">${icon("plus")} Deposit</button>
           <button class="btn btn-ghost btn-sm" data-act="withdraw">${icon("minus")} Withdraw</button>
           <button class="btn btn-primary btn-sm" data-act="trade">${icon("swap")} Trade</button>
         </div>
@@ -617,7 +622,7 @@ function executeOrder(container, sym){
 
   if(!amount || amount<=0){ err.textContent = "Enter an amount to continue."; err.hidden=false; return; }
   if(tradeSide==="buy"){
-    if(amount + fee > state.cash){ err.textContent = "Not enough cash. Add funds or reduce the amount."; err.hidden=false; return; }
+    if(amount + fee > state.cash){ err.textContent = "Not enough cash. Deposit more funds or reduce the amount."; err.hidden=false; return; }
     const pos = state.positions[sym] || { shares:0, avgCost:0 };
     const newShares = amount/price;
     const totShares = pos.shares + newShares;
@@ -688,8 +693,8 @@ function openPaySheet(mode){
   payMode = mode;
   payMethod = "bank";
   const sheet = document.getElementById("paySheet");
-  document.getElementById("paySheetTitle").textContent = mode==="deposit" ? "Add funds" : "Withdraw funds";
-  document.getElementById("paySheetSub").textContent = mode==="deposit" ? "Top up your demo balance" : "Move funds out of Kasuwa";
+  document.getElementById("paySheetTitle").textContent = mode==="deposit" ? "Deposit" : "Withdraw funds";
+  document.getElementById("paySheetSub").textContent = mode==="deposit" ? "Top up your demo balance" : "Move funds out of StocksX";
   sheet.hidden = false;
   renderPayForm();
 }
@@ -724,7 +729,7 @@ function renderPayForm(){
     </div>
     <div class="pay-balance muted">Available balance: <strong>${fmtN(state.cash)}</strong></div>
     <p class="trade-error" id="payError" hidden></p>
-    <button class="btn btn-primary btn-block btn-lg" id="payContinue">${isDep ? "Add funds" : "Withdraw"}</button>
+    <button class="btn btn-primary btn-block btn-lg" id="payContinue">${isDep ? "Deposit" : "Withdraw"}</button>
   `;
   body.querySelectorAll(".qa").forEach(b=>b.addEventListener("click", ()=>{
     body.querySelector("#payAmount").value = b.dataset.amt;
@@ -756,14 +761,14 @@ function processPayment(){
     body.innerHTML = `
       <div class="pay-success">
         <div class="pay-check">${icon("check")}</div>
-        <h4>${isDep ? "Funds added!" : "Withdrawal complete!"}</h4>
+        <h4>${isDep ? "Deposit successful!" : "Withdrawal complete!"}</h4>
         <p class="muted">${fmtN(amount)} ${isDep?"added to":"withdrawn from"} your balance.</p>
         <button class="btn btn-primary btn-block" id="payDone">Done</button>
       </div>
     `;
     document.getElementById("payDone").addEventListener("click", ()=>{
       closePaySheet();
-      toast(isDep?"Funds added":"Withdrawal complete", fmtN(amount), "success");
+      toast(isDep?"Deposit successful":"Withdrawal complete", fmtN(amount), "success");
     });
     updateSideBalance();
     const view = (location.hash||"#/home").replace(/^#\//,"").split("/")[0];
@@ -883,7 +888,7 @@ const LESSONS = [
       {h:"Market vs limit orders"},
       {p:"A market order buys or sells immediately at the current best price. A limit order lets you set the exact price you're willing to pay — it only executes if the market reaches that price."},
       {ul:["Market order: fastest, price may vary slightly","Limit order: more control, may not fill immediately","Both incur broker and exchange fees (often ~0.3%)"]},
-      {key:"Always start with a practice (paper) account — like the one you're using right now in Kasuwa — before risking real money."},
+      {key:"Always start with a practice (paper) account — like the one you're using right now in StocksX — before risking real money."},
     ]},
   { id:"charts", title:"Reading a Stock Chart", level:"Beginner", dur:"6 min", icon:"chart", color:"#f5b83d",
     desc:"Candlesticks, trends, and support & resistance explained simply.",
@@ -948,7 +953,7 @@ const LESSONS = [
       {h:"Shariah screening"},
       {p:"A stock is 'Shariah-compliant' if the company's main business is halal and its interest-bearing debt and interest income stay below set thresholds. In Nigeria, the NGX has a dedicated Lotus Islamic Index tracking compliant stocks — and funds like the Lotus Halal Equity ETF let you invest in a basket of screened stocks at once."},
       {ul:["Avoid interest-based banks and lenders","Avoid alcohol, gambling, and pork-related businesses","Look for the Lotus Islamic Index on the NGX"]},
-      {key:"On Kasuwa, look for the gold 'Halal' tag — those stocks pass a simplified Shariah screen so you can invest with peace of mind."},
+      {key:"On StocksX, look for the gold 'Halal' tag — those stocks pass a simplified Shariah screen so you can invest with peace of mind."},
     ]},
 ];
 
@@ -963,7 +968,7 @@ function renderLearn(){
     <div class="learn-hero glass">
       <img src="assets/learn.png" alt="Learn" class="learn-hero-img" />
       <div class="learn-hero-text">
-        <span class="tag">${icon("award")} Kasuwa Academy</span>
+        <span class="tag">${icon("award")} StocksX Academy</span>
         <h3 style="font-size:22px;margin:10px 0 6px">Master the Nigerian stock market</h3>
         <p class="muted" style="font-size:14px;line-height:1.6">Short, practical lessons — from your first share to long-term wealth. No jargon, no hype.</p>
         <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
@@ -1082,7 +1087,7 @@ function setupStartFlow(){
   function enterApp(){
     state.onboarded = true; saveState();
     flow.hidden = true;
-    toast("Welcome to Kasuwa 👋", "You're using a ₦500,000 demo account");
+    toast("Welcome to StocksX 👋", "You're using a ₦500,000 demo account");
   }
 
   if(!state.onboarded){
@@ -1206,7 +1211,7 @@ function renderProfile(){
     <div class="section">
       <div class="section-title">More</div>
       <div class="card glass settings-list">
-        ${moreRow("info", "About Kasuwa")}
+        ${moreRow("info", "About StocksX")}
         ${moreRow("help", "Help & support")}
         ${moreRow("shield", "Privacy policy")}
         ${moreRow("file", "Terms of service")}

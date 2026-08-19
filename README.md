@@ -1,6 +1,6 @@
-# Kasuwa 📈 — Nigerian Stock Trading App
+# StocksX 📈 — Nigerian Stock Trading App
 
-**Kasuwa** ("market" in Hausa) is a modern, mobile-first stock trading app built for Nigeria — with special love for the North. Trade NGX stocks, track your portfolio, and learn how to invest, all in a sleek glassmorphism interface.
+**StocksX** is a modern, mobile-first stock trading app built for Nigeria — with special love for the North. Trade NGX stocks, track your portfolio, and learn how to invest, all in a sleek glassmorphism interface.
 
 > ⚠️ **Demo / paper-trading only.** Prices are indicative and simulated. No real money is involved.
 
@@ -12,7 +12,7 @@
 - 💼 **Portfolio** — live holdings, day & total P&L, transaction history, performance chart (persists in `localStorage`)
 - ⭐ **Watchlist** — star stocks to follow them from Home
 - 🕌 **Shariah-compliant filter** — a gold "Halal" tag + a "Halal only" filter (a thoughtful touch for Northern Nigeria)
-- 🎓 **Kasuwa Academy** — 8 free lessons (what is the stock market, charts, fundamental & technical analysis, risk management, long-term investing, and Shariah-compliant investing)
+- 🎓 **StocksX Academy** — 8 free lessons (what is the stock market, charts, fundamental & technical analysis, risk management, long-term investing, and Shariah-compliant investing)
 - 📱 **Mobile-first** — bottom navigation with a raised Trade button, glassy cards, and full desktop support (sidebar layout)
 - 🖼️ **AI-generated brand assets** — logo, hero mockup, and learning illustration
 
@@ -21,7 +21,7 @@
 Pure **HTML + CSS + vanilla JavaScript** — no frameworks, no build step, no chart libraries. Charts are drawn on `<canvas>`.
 
 ```
-kasuwa/
+stocksx/
 ├── index.html
 ├── css/styles.css
 ├── js/
@@ -36,7 +36,7 @@ kasuwa/
 Any static server works:
 
 ```bash
-cd kasuwa
+cd stocksx
 python3 -m http.server 8080
 # open http://localhost:8080
 ```
