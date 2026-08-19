@@ -952,6 +952,102 @@ function renderLesson(id){
 }
 
 /* =========================================================
+   START FLOW (splash → onboarding slides → auth mock)
+   ========================================================= */
+function setupStartFlow(){
+  const flow = document.getElementById("startFlow");
+  const steps = flow.querySelectorAll(".sf-step");
+  let slideIndex = 0;
+  const slides = document.getElementById("sfSlides");
+  const dots = document.getElementById("sfDots");
+
+  function showStep(name){
+    steps.forEach(s=>{ s.hidden = (s.dataset.step !== name); });
+    if(name==="onboard") buildDots();
+  }
+  function buildDots(){
+    const n = slides.children.length;
+    dots.innerHTML = "";
+    for(let i=0;i<n;i++){
+      const d = document.createElement("span");
+      d.className = "sf-dot" + (i===slideIndex?" active":"");
+      dots.appendChild(d);
+    }
+  }
+  function setSlide(i){
+    slideIndex = Math.max(0, Math.min(i, slides.children.length-1));
+    slides.scrollTo({ left: slideIndex * slides.clientWidth, behavior: "smooth" });
+    updateDots();
+    const next = document.getElementById("sfNext");
+    next.textContent = (slideIndex === slides.children.length-1) ? "Get started" : "Next";
+  }
+  function updateDots(){
+    [...dots.children].forEach((d,i)=>d.classList.toggle("active", i===slideIndex));
+  }
+
+  function enterApp(){
+    state.onboarded = true; saveState();
+    flow.hidden = true;
+    toast("Welcome to Kasuwa 👋", "You're using a ₦500,000 demo account");
+  }
+
+  if(!state.onboarded){
+    flow.hidden = false;
+    showStep("splash");
+  } else {
+    flow.hidden = true;
+  }
+
+  // Splash
+  document.getElementById("sfContinue").addEventListener("click", ()=>{ showStep("onboard"); setSlide(0); });
+  document.getElementById("sfToLogin").addEventListener("click", ()=>{ showStep("auth"); setAuthMode("login"); });
+
+  // Onboarding
+  document.getElementById("sfSkip1").addEventListener("click", enterApp);
+  document.getElementById("sfNext").addEventListener("click", ()=>{
+    if(slideIndex >= slides.children.length-1){ showStep("auth"); setAuthMode("login"); }
+    else setSlide(slideIndex+1);
+  });
+  slides.addEventListener("scroll", ()=>{
+    const i = Math.round(slides.scrollLeft / slides.clientWidth);
+    if(i !== slideIndex){ slideIndex = i; updateDots(); const next=document.getElementById("sfNext"); next.textContent = (i===slides.children.length-1)?"Get started":"Next"; }
+  }, { passive:true });
+
+  // Auth
+  document.getElementById("sfSkip2").addEventListener("click", enterApp);
+  document.getElementById("sfTabs").querySelectorAll(".sf-tab").forEach(t=>{
+    t.addEventListener("click", ()=>setAuthMode(t.dataset.tab));
+  });
+  document.getElementById("sfEye").addEventListener("click", ()=>{
+    const pw = document.getElementById("sfPassword");
+    const eye = document.getElementById("sfEye");
+    const show = pw.type === "password";
+    pw.type = show ? "text" : "password";
+    eye.textContent = show ? "🙈" : "👁";
+  });
+  document.getElementById("sfForm").addEventListener("submit", (e)=>{
+    e.preventDefault();
+    toast("Auth coming soon 🔒", "This is a design preview — logging you in as a guest.");
+    enterApp();
+  });
+  document.querySelectorAll(".sf-social-btn").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      toast(b.dataset.provider + " login", "Social sign-in isn't wired up yet (demo)");
+    });
+  });
+
+  function setAuthMode(mode){
+    const login = mode === "login";
+    document.querySelectorAll("#sfTabs .sf-tab").forEach(t=>t.classList.toggle("active", t.dataset.tab===mode));
+    document.getElementById("sfAuthTitle").textContent = login ? "Welcome back" : "Create your account";
+    document.getElementById("sfAuthSub").textContent = login ? "Log in to continue trading" : "Start your investing journey";
+    document.getElementById("sfNameField").hidden = login;
+    document.getElementById("sfForgot").style.display = login ? "block" : "none";
+    document.getElementById("sfSubmit").textContent = login ? "Log in" : "Create account";
+  }
+}
+
+/* =========================================================
    Global search + tick loop + init
    ========================================================= */
 function setupGlobalSearch(){
@@ -1000,16 +1096,12 @@ function tickLoop(){
 function init(){
   injectIcons(document);
 
-  // onboarding
-  const onboard = document.getElementById("onboard");
-  if(!state.onboarded){ onboard.hidden = false; }
-  document.getElementById("onboardStart").addEventListener("click", ()=>{ state.onboarded = true; saveState(); onboard.hidden = true; });
-  document.getElementById("onboardSkip").addEventListener("click", ()=>{ state.onboarded = true; saveState(); onboard.hidden = true; });
+  // start flow (splash → onboarding → auth)
+  setupStartFlow();
 
   // trade sheet
   document.getElementById("tradeSheetClose").addEventListener("click", closeTradeSheet);
   document.getElementById("tradeSheet").addEventListener("click", e=>{ if(e.target.id==="tradeSheet") closeTradeSheet(); });
-  document.getElementById("onboard").addEventListener("click", e=>{ if(e.target.id==="onboard"){ state.onboarded=true; saveState(); onboard.hidden=true; } });
 
   // nav
   document.querySelectorAll("[data-nav]").forEach(a=>a.addEventListener("click", ()=>{ /* hash change triggers navigate */ }));

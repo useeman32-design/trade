@@ -163,18 +163,96 @@
   <!-- Toast container -->
   <div class="toasts" id="toasts"></div>
 
-  <!-- Onboarding -->
-  <div class="sheet-backdrop" id="onboard" hidden>
-    <div class="onboard-card glass-strong">
-      <img src="assets/hero.png" alt="Kasuwa trading app" class="onboard-img" />
-      <div class="onboard-body">
-        <div class="onboard-badge">₦ Paper trading · No real money</div>
-        <h2>Barka da zuwa 👋<br />Welcome to <span class="grad">Kasuwa</span></h2>
-        <p class="muted">Trade Nigeria's biggest stocks on the NGX, track your portfolio in real time, and learn how to invest — all from your phone.</p>
-        <button class="btn btn-primary btn-block" id="onboardStart">Start trading</button>
-        <button class="btn btn-ghost btn-block" id="onboardSkip">Skip for now</button>
+  <!-- ===================== START FLOW ===================== -->
+  <div class="start-flow" id="startFlow" hidden>
+    <!-- STEP 1: Splash -->
+    <section class="sf-step sf-splash" data-step="splash">
+      <div class="sf-splash-bg" aria-hidden="true"></div>
+      <div class="sf-brand"><img src="assets/logo.png" alt="Kasuwa" class="sf-logo" /><span class="sf-brandname">Kasuwa</span></div>
+      <img src="assets/welcome.png" alt="Welcome to Kasuwa" class="sf-illu" />
+      <div class="sf-splash-text">
+        <h1>Welcome to <span class="grad">Kasuwa</span></h1>
+        <p>Trade Nigeria's biggest stocks, grow your portfolio, and learn to invest — all in one beautiful app.</p>
       </div>
-    </div>
+      <div class="sf-actions">
+        <button class="btn btn-primary btn-block btn-lg" id="sfContinue">Continue</button>
+        <button class="btn btn-ghost btn-block" id="sfToLogin">I already have an account</button>
+      </div>
+    </section>
+
+    <!-- STEP 2: Onboarding slides -->
+    <section class="sf-step sf-onboard" data-step="onboard" hidden>
+      <button class="sf-skip" id="sfSkip1">Skip</button>
+      <div class="sf-slides" id="sfSlides">
+        <div class="sf-slide">
+          <img src="assets/onboard-trade.png" alt="Trade stocks" class="sf-slide-img" />
+          <h2>Trade Nigerian stocks</h2>
+          <p>Buy and sell shares of Dangote Cement, MTN, GTCO, Zenith and more — right on the NGX.</p>
+        </div>
+        <div class="sf-slide">
+          <img src="assets/onboard-portfolio.png" alt="Track portfolio" class="sf-slide-img" />
+          <h2>Track your portfolio</h2>
+          <p>Watch your investments grow with live prices, profit tracking and clean charts.</p>
+        </div>
+        <div class="sf-slide">
+          <img src="assets/learn.png" alt="Learn to invest" class="sf-slide-img" />
+          <h2>Learn to invest</h2>
+          <p>Free, simple lessons — from your first share to building long-term wealth. At your pace.</p>
+        </div>
+      </div>
+      <div class="sf-dots" id="sfDots"></div>
+      <div class="sf-actions">
+        <button class="btn btn-primary btn-block btn-lg" id="sfNext">Next</button>
+      </div>
+    </section>
+
+    <!-- STEP 3: Auth (mock) -->
+    <section class="sf-step sf-auth" data-step="auth" hidden>
+      <button class="sf-skip" id="sfSkip2">Skip for now</button>
+      <div class="sf-auth-head">
+        <img src="assets/logo.png" alt="Kasuwa" class="sf-auth-logo" />
+        <h2 id="sfAuthTitle">Welcome back</h2>
+        <p class="muted" id="sfAuthSub">Log in to continue trading</p>
+      </div>
+
+      <div class="sf-tabs" id="sfTabs">
+        <button class="sf-tab active" data-tab="login">Log in</button>
+        <button class="sf-tab" data-tab="signup">Sign up</button>
+      </div>
+
+      <form id="sfForm" autocomplete="off" novalidate>
+        <div class="field" id="sfNameField" hidden>
+          <label>Full name</label>
+          <input type="text" class="input" placeholder="e.g. Amina Yusuf" />
+        </div>
+        <div class="field">
+          <label>Email address</label>
+          <input type="email" class="input" placeholder="you@example.com" />
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <div class="input-wrap">
+            <input type="password" class="input" placeholder="••••••••" id="sfPassword" />
+            <button type="button" class="input-eye" id="sfEye">👁</button>
+          </div>
+        </div>
+        <div class="sf-forgot" id="sfForgot">Forgot password?</div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="sfSubmit">Log in</button>
+      </form>
+
+      <div class="sf-divider"><span>or continue with</span></div>
+      <div class="sf-social">
+        <button class="sf-social-btn" data-provider="google">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="#EA4335" d="M12 5.04c1.7 0 3.23.59 4.43 1.73l3.3-3.3C17.86 1.68 15.16.5 12 .5 7.32.5 3.25 3.18 1.28 7.09l3.9 3.03C6.12 7.44 8.84 5.04 12 5.04z"/><path fill="#4285F4" d="M23.5 12.27c0-.79-.07-1.55-.2-2.27H12v4.51h6.46c-.28 1.5-1.13 2.77-2.4 3.62l3.76 2.92c2.2-2.03 3.68-5.02 3.68-8.78z"/><path fill="#FBBC05" d="M5.18 14.4c-.25-.74-.39-1.52-.39-2.33s.14-1.59.39-2.33L1.28 6.71C.46 8.32 0 10.11 0 12.07s.46 3.75 1.28 5.36l3.9-3.03z"/><path fill="#34A853" d="M12 23.5c3.16 0 5.82-1.05 7.76-2.84l-3.76-2.92c-1.05.71-2.4 1.13-4 1.13-3.16 0-5.88-2.4-6.82-5.68l-3.9 3.03C3.25 20.82 7.32 23.5 12 23.5z"/></svg>
+          Google
+        </button>
+        <button class="sf-social-btn" data-provider="apple">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+          Apple
+        </button>
+      </div>
+      <p class="sf-terms">By continuing, you agree to our <a>Terms</a> &amp; <a>Privacy Policy</a>.</p>
+    </section>
   </div>
 
   <script src="js/data.js"></script>
