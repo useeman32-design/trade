@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#070b14" />
+<title>Kasuwa — Nigerian Stock Trading</title>
+<meta name="description" content="Kasuwa is a modern stock trading platform for Nigeria. Trade NGX stocks, track your portfolio, and learn to invest." />
+<link rel="icon" type="image/png" href="assets/logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <!-- Ambient background -->
+  <div class="bg" aria-hidden="true">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <!-- ===================== APP SHELL ===================== -->
+  <div class="app">
+
+    <!-- Sidebar (desktop) -->
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#/home" data-nav>
+        <img src="assets/logo.png" alt="Kasuwa logo" class="brand-logo" />
+        <div class="brand-text">
+          <span class="brand-name">Kasuwa</span>
+          <span class="brand-tag">Nigerian Stocks</span>
+        </div>
+      </a>
+
+      <nav class="side-nav">
+        <a href="#/home" class="nav-item" data-nav data-view="home"><span class="nav-ic" data-icon="home"></span><span>Home</span></a>
+        <a href="#/markets" class="nav-item" data-nav data-view="markets"><span class="nav-ic" data-icon="chart"></span><span>Markets</span></a>
+        <a href="#/trade" class="nav-item" data-nav data-view="trade"><span class="nav-ic" data-icon="swap"></span><span>Trade</span></a>
+        <a href="#/portfolio" class="nav-item" data-nav data-view="portfolio"><span class="nav-ic" data-icon="briefcase"></span><span>Portfolio</span></a>
+        <a href="#/learn" class="nav-item" data-nav data-view="learn"><span class="nav-ic" data-icon="book"></span><span>Learn</span></a>
+      </nav>
+
+      <div class="side-foot">
+        <div class="card glass side-balance">
+          <span class="side-balance-label">Paper balance</span>
+          <span class="side-balance-value" id="sideBalance">₦0</span>
+        </div>
+        <div class="side-user">
+          <div class="avatar" id="sideAvatar">AA</div>
+          <div>
+            <div class="side-user-name" id="sideUserName">Amina</div>
+            <div class="side-user-sub">Demo account</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <!-- Top bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <a class="brand-mobile" href="#/home" data-nav>
+            <img src="assets/logo.png" alt="Kasuwa" class="brand-logo" />
+            <span class="brand-name">Kasuwa</span>
+          </a>
+          <div class="search-box" id="globalSearchWrap">
+            <span class="search-ic" data-icon="search"></span>
+            <input id="globalSearch" type="text" placeholder="Search stocks e.g. Dangote, GTCO…" autocomplete="off" />
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="icon-btn" id="notifBtn" title="Notifications" aria-label="Notifications">
+            <span data-icon="bell"></span>
+            <span class="dot" id="notifDot"></span>
+          </button>
+          <button class="chip-chip" id="marketStatusChip"><span class="pulse"></span> Market open</button>
+        </div>
+      </header>
+
+      <!-- Views -->
+      <div class="view" id="view-home"></div>
+      <div class="view" id="view-markets"></div>
+      <div class="view" id="view-trade"></div>
+      <div class="view" id="view-portfolio"></div>
+      <div class="view" id="view-learn"></div>
+      <div class="view" id="view-stock"></div>
+      <div class="view" id="view-lesson"></div>
+    </main>
+
+    <!-- Bottom nav (mobile) -->
+    <nav class="bottomnav" id="bottomnav">
+      <a href="#/home" class="bn-item" data-nav data-view="home"><span data-icon="home"></span><span class="bn-label">Home</span></a>
+      <a href="#/markets" class="bn-item" data-nav data-view="markets"><span data-icon="chart"></span><span class="bn-label">Markets</span></a>
+      <a href="#/trade" class="bn-item bn-trade" data-nav data-view="trade"><span class="bn-trade-btn" data-icon="swap"></span><span class="bn-label">Trade</span></a>
+      <a href="#/portfolio" class="bn-item" data-nav data-view="portfolio"><span data-icon="briefcase"></span><span class="bn-label">Portfolio</span></a>
+      <a href="#/learn" class="bn-item" data-nav data-view="learn"><span data-icon="book"></span><span class="bn-label">Learn</span></a>
+    </nav>
+  </div>
+
+  <!-- Trade sheet (modal) -->
+  <div class="sheet-backdrop" id="tradeSheet" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="tradeSheetTitle">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <div>
+          <h3 id="tradeSheetTitle">Buy DANGCEM</h3>
+          <p class="muted" id="tradeSheetSub">Dangote Cement · NGX</p>
+        </div>
+        <button class="icon-btn" id="tradeSheetClose" aria-label="Close"><span data-icon="x"></span></button>
+      </div>
+      <div class="sheet-body">
+        <div class="trade-price-row">
+          <span class="trade-price" id="tradeSheetPrice">₦0.00</span>
+          <span class="trade-change" id="tradeSheetChange">+0.00%</span>
+        </div>
+
+        <div class="segmented" id="tradeSideSeg">
+          <button class="seg active" data-side="buy">Buy</button>
+          <button class="seg" data-side="sell">Sell</button>
+        </div>
+
+        <div class="field">
+          <label>Order type</label>
+          <div class="segmented sm" id="orderTypeSeg">
+            <button class="seg active" data-type="market">Market</button>
+            <button class="seg" data-type="limit">Limit</button>
+          </div>
+        </div>
+
+        <div class="field" id="limitPriceField" hidden>
+          <label>Limit price (₦)</label>
+          <input type="number" id="limitPriceInput" class="input" placeholder="0.00" inputmode="decimal" />
+        </div>
+
+        <div class="field">
+          <label>Amount (₦)</label>
+          <input type="number" id="tradeAmountInput" class="input input-lg" placeholder="0.00" inputmode="decimal" />
+          <div class="quick-amounts">
+            <button class="qa" data-amt="10000">₦10k</button>
+            <button class="qa" data-amt="50000">₦50k</button>
+            <button class="qa" data-amt="100000">₦100k</button>
+            <button class="qa" data-amt="500000">₦500k</button>
+            <button class="qa" data-amt="max">Max</button>
+          </div>
+        </div>
+
+        <div class="trade-summary glass">
+          <div class="ts-row"><span>Est. shares</span><span id="sumShares">0</span></div>
+          <div class="ts-row"><span>Price per share</span><span id="sumPrice">₦0.00</span></div>
+          <div class="ts-row"><span>Fees (0.3%)</span><span id="sumFees">₦0.00</span></div>
+          <div class="ts-row ts-total"><span>Total</span><span id="sumTotal">₦0.00</span></div>
+          <div class="ts-row"><span>Available cash</span><span id="sumCash">₦0.00</span></div>
+        </div>
+        <p class="trade-error" id="tradeError" hidden></p>
+        <button class="btn btn-primary btn-block" id="tradeConfirmBtn">Review order</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div class="toasts" id="toasts"></div>
+
+  <!-- Onboarding -->
+  <div class="sheet-backdrop" id="onboard" hidden>
+    <div class="onboard-card glass-strong">
+      <img src="assets/hero.png" alt="Kasuwa trading app" class="onboard-img" />
+      <div class="onboard-body">
+        <div class="onboard-badge">₦ Paper trading · No real money</div>
+        <h2>Barka da zuwa 👋<br />Welcome to <span class="grad">Kasuwa</span></h2>
+        <p class="muted">Trade Nigeria's biggest stocks on the NGX, track your portfolio in real time, and learn how to invest — all from your phone.</p>
+        <button class="btn btn-primary btn-block" id="onboardStart">Start trading</button>
+        <button class="btn btn-ghost btn-block" id="onboardSkip">Skip for now</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
