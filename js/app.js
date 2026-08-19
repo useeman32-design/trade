@@ -36,7 +36,7 @@ const ICONS = {
   layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
 };
 function icon(name){
-  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||''}</svg>`;
+  return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||''}</svg>`;
 }
 function injectIcons(root){
   (root||document).querySelectorAll("[data-icon]").forEach(el=>{
@@ -259,8 +259,8 @@ function bindHomeActions(){
   root.querySelectorAll("[data-act]").forEach(el=>{
     el.addEventListener("click", ()=>{
       const a = el.dataset.act;
-      if(a==="deposit"){ state.cash += 100000; saveState(); toast("₦100,000 added","Paper funds topped up"); renderHome(); }
-      if(a==="withdraw"){ if(state.cash>=100000){ state.cash-=100000; saveState(); toast("₦100,000 withdrawn"); renderHome(); } else toast("Insufficient cash","You need at least ₦100,000 to withdraw","error"); }
+      if(a==="deposit"){ openPaySheet("deposit"); }
+      if(a==="withdraw"){ openPaySheet("withdraw"); }
       if(a==="trade"){ location.hash = "#/trade"; }
     });
   });
@@ -364,11 +364,13 @@ function bindMarkets(){
    ========================================================= */
 let stockTF = "1D";
 let stockMode = "line"; // line | candles
+let lastStockSym = null;
 
 function renderStock(sym){
   const s = stockBySym(sym);
   if(!s){ location.hash = "#/markets"; return; }
-  stockTF = "1D"; stockMode = "line";
+  // only reset timeframe/mode when switching to a different stock
+  if(lastStockSym !== sym){ stockTF = "1D"; stockMode = "line"; lastStockSym = sym; }
   const price = PRICES[sym], chg = pctChange(sym), up = chg>=0;
   const inWatch = state.watchlist.includes(sym);
   const pos = state.positions[sym];
@@ -483,23 +485,14 @@ function drawStockChart(sym){
 /* =========================================================
    TRADE VIEW + SHEET
    ========================================================= */
-let tradeSel = "DANGCEM";
-
 function renderTrade(){
-  const s = stockBySym(tradeSel);
   document.getElementById("view-trade").innerHTML = `
     <div class="page-head">
-      <div><div class="page-title">Trade</div><div class="page-sub">Buy and sell NGX stocks (paper money)</div></div>
+      <div><div class="page-title">Trade</div><div class="page-sub">Tap a stock to view it, or buy/sell instantly</div></div>
     </div>
-    <div class="trade-layout">
-      <div>
-        <div class="search-box picker-search">${icon("search")}<input id="tradePickerSearch" placeholder="Search stocks…" value="${mktQuery}"/></div>
-        <div class="glass picker-list" id="tradePickerList">${STOCKS.map(s=>pickerItemHTML(s)).join("")}</div>
-      </div>
-      <div class="card order-card" id="tradeOrderCard"></div>
-    </div>
+    <div class="search-box picker-search">${icon("search")}<input id="tradePickerSearch" placeholder="Search stocks e.g. GTCO, Dangote…"/></div>
+    <div class="glass picker-list" id="tradePickerList">${STOCKS.map(s=>pickerItemHTML(s)).join("")}</div>
   `;
-  renderOrderForm(document.getElementById("tradeOrderCard"), tradeSel);
   const ps = document.getElementById("tradePickerSearch");
   ps.addEventListener("input", e=>{
     const q = e.target.value.toLowerCase();
@@ -511,17 +504,22 @@ function renderTrade(){
 
 function pickerItemHTML(s){
   const chg = pctChange(s.sym), up=chg>=0;
-  return `<div class="picker-item ${s.sym===tradeSel?"selected":""}" data-sym="${s.sym}">
+  return `<div class="picker-item" data-sym="${s.sym}">
     ${tickerBadge(s)}
     <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14px">${s.sym}</div><div class="muted" style="font-size:12px">${s.name}</div></div>
     <div style="text-align:right"><div style="font-weight:600;font-size:14px">${fmtN(PRICES[s.sym])}</div><div class="${up?"up":"down"}" style="font-size:12px;font-weight:600">${fmtPct(chg)}</div></div>
+    <button class="btn btn-buy btn-sm picker-buy" data-buy="${s.sym}">Buy</button>
   </div>`;
 }
 function bindPickerItems(){
   document.querySelectorAll("#tradePickerList .picker-item").forEach(el=>{
-    el.addEventListener("click", ()=>{
-      tradeSel = el.dataset.sym;
-      renderTrade();
+    el.addEventListener("click", (e)=>{
+      if(e.target.closest(".picker-buy")) return; // buy button handled separately
+      location.hash = "#/stock/" + el.dataset.sym;
+    });
+    el.querySelector(".picker-buy").addEventListener("click", (e)=>{
+      e.stopPropagation();
+      openTradeSheet(el.dataset.buy, "buy");
     });
   });
 }
@@ -660,25 +658,117 @@ function afterTrade(sym){
 }
 
 /* ---------------- Trade sheet (modal) ---------------- */
-let SHEET_BODY_TEMPLATE = "";
 function openTradeSheet(sym, side){
   tradeSide = side || "buy";
   orderType = "market";
   const s = stockBySym(sym);
   const sheet = document.getElementById("tradeSheet");
-  const body = sheet.querySelector(".sheet-body");
-  if(!SHEET_BODY_TEMPLATE) SHEET_BODY_TEMPLATE = body.innerHTML;
+  const body = document.getElementById("tradeSheetBody");
   document.getElementById("tradeSheetTitle").textContent = (side==="sell"?"Sell ":"Buy ") + s.sym;
   document.getElementById("tradeSheetSub").textContent = s.name + " · NGX";
-  body.innerHTML = '<div class="order-holder"></div>';
-  renderOrderForm(body.querySelector(".order-holder"), sym);
+  body.innerHTML = "";
+  renderOrderForm(body, sym);
   sheet.hidden = false;
-  sheet.querySelector(".sheet-body").scrollTop = 0;
 }
 function closeTradeSheet(){
-  const sheet = document.getElementById("tradeSheet");
-  sheet.hidden = true;
-  if(SHEET_BODY_TEMPLATE) sheet.querySelector(".sheet-body").innerHTML = SHEET_BODY_TEMPLATE;
+  document.getElementById("tradeSheet").hidden = true;
+}
+
+/* ---------------- Payment sheet (add funds / withdraw) ---------------- */
+let payMode = "deposit";
+let payMethod = "bank";
+const PAY_METHODS = [
+  { id:"bank", label:"Bank transfer", sub:"Instant · via your bank app", icon:"briefcase" },
+  { id:"card", label:"Debit card", sub:"Visa, Verve, Mastercard", icon:"wallet" },
+  { id:"ussd", label:"USSD", sub:"Dial a code to approve", icon:"layers" },
+];
+
+function openPaySheet(mode){
+  payMode = mode;
+  payMethod = "bank";
+  const sheet = document.getElementById("paySheet");
+  document.getElementById("paySheetTitle").textContent = mode==="deposit" ? "Add funds" : "Withdraw funds";
+  document.getElementById("paySheetSub").textContent = mode==="deposit" ? "Top up your demo balance" : "Move funds out of Kasuwa";
+  sheet.hidden = false;
+  renderPayForm();
+}
+function closePaySheet(){ document.getElementById("paySheet").hidden = true; }
+
+function renderPayForm(){
+  const body = document.getElementById("paySheetBody");
+  const isDep = payMode==="deposit";
+  body.innerHTML = `
+    <div class="pay-amount-wrap">
+      <div class="pay-label">${isDep ? "Amount to add" : "Amount to withdraw"}</div>
+      <div class="pay-amount">
+        <span class="pay-cur">₦</span>
+        <input type="number" id="payAmount" class="pay-amount-input" placeholder="0" inputmode="numeric" />
+      </div>
+      <div class="quick-amounts">
+        <button class="qa" data-amt="10000">₦10k</button>
+        <button class="qa" data-amt="50000">₦50k</button>
+        <button class="qa" data-amt="100000">₦100k</button>
+        <button class="qa" data-amt="500000">₦500k</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>${isDep ? "Pay with" : "Withdraw to"}</label>
+      <div class="pay-methods">
+        ${PAY_METHODS.map(m=>`<div class="pay-method ${payMethod===m.id?"active":""}" data-method="${m.id}">
+          <span class="pay-method-ic">${icon(m.icon)}</span>
+          <div style="flex:1"><div class="pay-method-label">${m.label}</div><div class="pay-method-sub">${m.sub}</div></div>
+          <span class="pay-radio">${icon("check")}</span>
+        </div>`).join("")}
+      </div>
+    </div>
+    <div class="pay-balance muted">Available balance: <strong>${fmtN(state.cash)}</strong></div>
+    <p class="trade-error" id="payError" hidden></p>
+    <button class="btn btn-primary btn-block btn-lg" id="payContinue">${isDep ? "Add funds" : "Withdraw"}</button>
+  `;
+  body.querySelectorAll(".qa").forEach(b=>b.addEventListener("click", ()=>{
+    body.querySelector("#payAmount").value = b.dataset.amt;
+  }));
+  body.querySelectorAll(".pay-method").forEach(m=>m.addEventListener("click", ()=>{
+    payMethod = m.dataset.method; renderPayForm();
+  }));
+  document.getElementById("payContinue").addEventListener("click", ()=>processPayment());
+}
+
+function processPayment(){
+  const body = document.getElementById("paySheetBody");
+  const amount = parseFloat(body.querySelector("#payAmount").value) || 0;
+  const err = document.getElementById("payError");
+  const isDep = payMode==="deposit";
+  if(amount < 500){ err.textContent = "Minimum amount is ₦500."; err.hidden=false; return; }
+  if(!isDep && amount > state.cash){ err.textContent = "You can't withdraw more than your balance."; err.hidden=false; return; }
+  const methodLabel = (PAY_METHODS.find(m=>m.id===payMethod)||PAY_METHODS[0]).label;
+  body.innerHTML = `
+    <div class="pay-processing">
+      <div class="spinner"></div>
+      <h4>Processing ${isDep?"payment":"withdrawal"}…</h4>
+      <p class="muted">${methodLabel}</p>
+    </div>
+  `;
+  setTimeout(()=>{
+    if(isDep) state.cash += amount; else state.cash -= amount;
+    saveState();
+    body.innerHTML = `
+      <div class="pay-success">
+        <div class="pay-check">${icon("check")}</div>
+        <h4>${isDep ? "Funds added!" : "Withdrawal complete!"}</h4>
+        <p class="muted">${fmtN(amount)} ${isDep?"added to":"withdrawn from"} your balance.</p>
+        <button class="btn btn-primary btn-block" id="payDone">Done</button>
+      </div>
+    `;
+    document.getElementById("payDone").addEventListener("click", ()=>{
+      closePaySheet();
+      toast(isDep?"Funds added":"Withdrawal complete", fmtN(amount), "success");
+    });
+    updateSideBalance();
+    const view = (location.hash||"#/home").replace(/^#\//,"").split("/")[0];
+    if(view==="portfolio") renderPortfolio();
+    else if(view==="home") renderHome();
+  }, 1500);
 }
 
 /* =========================================================
@@ -897,13 +987,14 @@ function lessonCard(l, i){
   return `<div class="lesson-card card" data-lesson="${l.id}">
     <div class="lesson-thumb" style="background:${gradient}">
       <div class="lt-bg" style="background:radial-gradient(circle at 80% 20%, ${l.color}55, transparent 60%)"></div>
-      <div class="lt-num" style="color:${l.color}">${icon(l.icon)}</div>
+      <div class="lt-badge" style="color:${l.color};background:${l.color}1c">${icon(l.icon)}</div>
+      ${done?'<div class="lt-check">'+icon("checkCircle")+'</div>':""}
     </div>
     <div class="lesson-body">
-      <div class="lesson-meta"><span class="tag">${l.level}</span><span class="tag">${icon("clock")} ${l.dur}</span>${done?'<span class="lesson-done">'+icon("checkCircle")+' Done</span>':""}</div>
+      <div class="lesson-meta"><span class="tag">${l.level}</span><span class="tag">${icon("clock")} ${l.dur}</span></div>
       <div class="lesson-title">${l.title}</div>
       <div class="lesson-desc">${l.desc}</div>
-      <div style="display:flex;align-items:center;gap:5px;color:var(--green-2);font-weight:600;font-size:13px">${done?"Review lesson":"Start lesson"} ${icon("chevronRight")}</div>
+      <div class="lesson-cta">${done?"Review lesson":"Start lesson"} <span class="lesson-arrow">${icon("chevronRight")}</span></div>
     </div>
   </div>`;
 }
@@ -932,8 +1023,10 @@ function renderLesson(id){
           return "";
         }).join("")}
       </div>
-      <button class="btn ${done?"btn-ghost":"btn-primary"} btn-block" id="completeLesson" style="margin-top:8px">${icon(done?"checkCircle":"check")} ${done?"Mark as not completed":"Mark as completed"}</button>
-      ${next?`<button class="btn btn-ghost btn-block" data-go="lesson:${next.id}" style="margin-top:10px">Next: ${next.title} ${icon("chevronRight")}</button>`:""}
+      <div class="lesson-actions">
+        <button class="btn ${done?"btn-ghost":"btn-primary"}" id="completeLesson">${icon(done?"checkCircle":"check")} ${done?"Mark as not completed":"Mark as completed"}</button>
+      </div>
+      ${next?`<div class="lesson-next"><button class="btn btn-ghost" data-go="lesson:${next.id}">Next: ${next.title} <span class="lesson-arrow">${icon("chevronRight")}</span></button></div>`:""}
     </div>
   `;
   document.getElementById("completeLesson").addEventListener("click", ()=>{
@@ -1084,11 +1177,13 @@ function tickLoop(){
   liveTick();
   updateSideBalance();
   const view = (location.hash||"#/home").replace(/^#\//,"").split("/")[0];
-  // gentle periodic refresh so prices feel live without disrupting scroll/focus
+  // gentle periodic refresh so prices feel live without disrupting scroll
   if(tickSeq % 10 === 0){
+    const y = window.scrollY;
     if(view==="markets") renderMarkets();
     else if(view==="portfolio") renderPortfolio();
     else if(view==="home") renderHome();
+    window.scrollTo(0, y);
   }
   if(view==="stock" && currentStock) drawStockChart(currentStock);
 }
@@ -1102,6 +1197,9 @@ function init(){
   // trade sheet
   document.getElementById("tradeSheetClose").addEventListener("click", closeTradeSheet);
   document.getElementById("tradeSheet").addEventListener("click", e=>{ if(e.target.id==="tradeSheet") closeTradeSheet(); });
+  // payment sheet
+  document.getElementById("paySheetClose").addEventListener("click", closePaySheet);
+  document.getElementById("paySheet").addEventListener("click", e=>{ if(e.target.id==="paySheet") closePaySheet(); });
 
   // nav
   document.querySelectorAll("[data-nav]").forEach(a=>a.addEventListener("click", ()=>{ /* hash change triggers navigate */ }));

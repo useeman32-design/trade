@@ -103,7 +103,6 @@
   <!-- Trade sheet (modal) -->
   <div class="sheet-backdrop" id="tradeSheet" hidden>
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="tradeSheetTitle">
-      <div class="sheet-handle"></div>
       <div class="sheet-head">
         <div>
           <h3 id="tradeSheetTitle">Buy DANGCEM</h3>
@@ -111,52 +110,21 @@
         </div>
         <button class="icon-btn" id="tradeSheetClose" aria-label="Close"><span data-icon="x"></span></button>
       </div>
-      <div class="sheet-body">
-        <div class="trade-price-row">
-          <span class="trade-price" id="tradeSheetPrice">₦0.00</span>
-          <span class="trade-change" id="tradeSheetChange">+0.00%</span>
-        </div>
+      <div class="sheet-body" id="tradeSheetBody"></div>
+    </div>
+  </div>
 
-        <div class="segmented" id="tradeSideSeg">
-          <button class="seg active" data-side="buy">Buy</button>
-          <button class="seg" data-side="sell">Sell</button>
+  <!-- Payment sheet (add funds / withdraw) -->
+  <div class="sheet-backdrop" id="paySheet" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="paySheetTitle">
+      <div class="sheet-head">
+        <div>
+          <h3 id="paySheetTitle">Add funds</h3>
+          <p class="muted" id="paySheetSub">Top up your demo balance</p>
         </div>
-
-        <div class="field">
-          <label>Order type</label>
-          <div class="segmented sm" id="orderTypeSeg">
-            <button class="seg active" data-type="market">Market</button>
-            <button class="seg" data-type="limit">Limit</button>
-          </div>
-        </div>
-
-        <div class="field" id="limitPriceField" hidden>
-          <label>Limit price (₦)</label>
-          <input type="number" id="limitPriceInput" class="input" placeholder="0.00" inputmode="decimal" />
-        </div>
-
-        <div class="field">
-          <label>Amount (₦)</label>
-          <input type="number" id="tradeAmountInput" class="input input-lg" placeholder="0.00" inputmode="decimal" />
-          <div class="quick-amounts">
-            <button class="qa" data-amt="10000">₦10k</button>
-            <button class="qa" data-amt="50000">₦50k</button>
-            <button class="qa" data-amt="100000">₦100k</button>
-            <button class="qa" data-amt="500000">₦500k</button>
-            <button class="qa" data-amt="max">Max</button>
-          </div>
-        </div>
-
-        <div class="trade-summary glass">
-          <div class="ts-row"><span>Est. shares</span><span id="sumShares">0</span></div>
-          <div class="ts-row"><span>Price per share</span><span id="sumPrice">₦0.00</span></div>
-          <div class="ts-row"><span>Fees (0.3%)</span><span id="sumFees">₦0.00</span></div>
-          <div class="ts-row ts-total"><span>Total</span><span id="sumTotal">₦0.00</span></div>
-          <div class="ts-row"><span>Available cash</span><span id="sumCash">₦0.00</span></div>
-        </div>
-        <p class="trade-error" id="tradeError" hidden></p>
-        <button class="btn btn-primary btn-block" id="tradeConfirmBtn">Review order</button>
+        <button class="icon-btn" id="paySheetClose" aria-label="Close"><span data-icon="x"></span></button>
       </div>
+      <div class="sheet-body" id="paySheetBody"></div>
     </div>
   </div>
 
@@ -195,7 +163,7 @@
           <p>Watch your investments grow with live prices, profit tracking and clean charts.</p>
         </div>
         <div class="sf-slide">
-          <img src="assets/learn.png" alt="Learn to invest" class="sf-slide-img" />
+          <img src="assets/onboard-learn.png" alt="Learn to invest" class="sf-slide-img" />
           <h2>Learn to invest</h2>
           <p>Free, simple lessons — from your first share to building long-term wealth. At your pace.</p>
         </div>

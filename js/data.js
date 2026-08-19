@@ -59,20 +59,32 @@ function generateOHLC(sym){
   for(const tf in TIMEFRAMES){
     const n = TIMEFRAMES[tf].points;
     const arr = [];
-    let price = s.prevClose * (0.94 + rnd()*0.12);
-    // drift toward current price so the chart ends near "now"
     const target = s.price;
+    // start price: a plausible distance from current price depending on horizon
+    const startBias = tf==="1D" ? 0.998 : tf==="1W" ? 0.985 : tf==="1M" ? 0.97 : tf==="3M" ? 0.90 : 0.80;
+    let price = target * (startBias + rnd()*0.04);
+    const volBase = tf==="1D" ? 0.0018 : tf==="1W" ? 0.004 : tf==="1M" ? 0.008 : tf==="3M" ? 0.012 : 0.016;
+    // 2-3 sine waves per series to give it a realistic ebb & flow
+    const waves = 2 + Math.floor(rnd()*2);
+    const phases = [];
+    for(let w=0; w<waves; w++) phases.push({ amp: 0.4+rnd()*0.8, freq: 0.6+rnd()*1.8, ph: rnd()*Math.PI*2 });
     for(let i=0;i<n;i++){
       const progress = i/(n-1);
-      const pull = (target - price) * (0.02 + progress*0.06);
-      const vol = price * (tf==="1D"?0.0035 : tf==="1W"?0.006 : 0.012);
-      const drift = pull + (rnd()-0.5)*vol*2;
+      // mean-reverting drift toward the target
+      const pull = (target - price) * (0.03 + progress*0.12);
+      // gentle cyclical component
+      let wave = 0;
+      for(const w of phases) wave += Math.sin(progress*w.freq*Math.PI*2 + w.ph) * w.amp;
+      wave *= price * volBase * 0.4;
+      const noise = (rnd()-0.5) * price * volBase * 1.6;
+      const drift = pull + wave + noise;
       const open = price;
       let close = price + drift;
-      if(close<=0) close = price*0.9;
-      const high = Math.max(open,close)*(1+rnd()*0.006);
-      const low = Math.min(open,close)*(1-rnd()*0.006);
-      const volume = Math.round((s.vol ? parseFloat(s.vol)*1e6 : 2e6) * (0.4+rnd()*1.2));
+      if(close <= target*0.5) close = target*0.5;
+      const spread = price * volBase * (0.5 + rnd()*0.9);
+      const high = Math.max(open,close) + spread*rnd();
+      const low = Math.min(open,close) - spread*rnd();
+      const volume = Math.round((s.vol ? parseFloat(s.vol)*1e6 : 2e6) * (0.4+rnd()*1.3));
       arr.push({ o:+open.toFixed(2), h:+high.toFixed(2), l:+low.toFixed(2), c:+close.toFixed(2), v:volume });
       price = close;
     }

@@ -600,3 +600,88 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   .sf-slide-img{max-width:280px}
   .sf-splash-text h1{font-size:26px}
 }
+
+/* =========================================================
+   POLISH PASS
+   ========================================================= */
+
+/* ---- Icon sizing (fixes oversized/missing icons) ---- */
+.ic{width:1.1em;height:1.1em;flex-shrink:0;display:inline-block;vertical-align:-0.12em}
+.icon-btn .ic{width:20px;height:20px}
+.search-ic .ic{width:18px;height:18px}
+.empty-ic .ic{width:28px;height:28px}
+.txn-ic .ic{width:18px;height:18px}
+.toast .ic{width:20px;height:20px}
+.balance-label .ic{width:15px;height:15px;vertical-align:-0.2em}
+.bn-item .ic{width:22px;height:22px}
+.bn-trade-btn .ic{width:22px;height:22px}
+
+/* ---- Overflow guards (prevent horizontal drag) ---- */
+canvas{display:block;max-width:100%}
+.main{overflow-x:clip}
+.view{overflow-x:clip}
+.chart-wrap{overflow:visible}
+.hscroll{max-width:100%}
+
+/* ---- Onboarding: portrait images + button pinned bottom ---- */
+.sf-illu{width:min(240px,64vw);aspect-ratio:3/4;object-fit:cover;border-radius:24px;box-shadow:0 30px 60px -20px rgba(0,0,0,.7);margin:6px auto;position:relative;z-index:1}
+.sf-slide-img{width:min(230px,58vw);aspect-ratio:3/4;object-fit:cover;border-radius:22px;box-shadow:0 24px 50px -18px rgba(0,0,0,.7);margin-bottom:24px}
+.sf-onboard{display:flex;flex-direction:column}
+.sf-onboard .sf-actions{margin-top:auto;padding:0 24px 10px}
+.sf-dots{margin:20px 0 16px}
+.sf-slide h2{font-size:22px}
+.sf-slide p{font-size:14px}
+
+/* ---- Trade picker buy button ---- */
+.picker-item{gap:12px}
+.picker-buy{padding:8px 16px;border-radius:10px;font-size:13px}
+
+/* ---- Learning cards ---- */
+.lt-badge{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;position:absolute;bottom:12px;left:14px;backdrop-filter:blur(8px);border:1px solid var(--border)}
+.lt-badge .ic{width:22px;height:22px}
+.lesson-cta{display:inline-flex;align-items:center;gap:5px;color:var(--green-2);font-weight:600;font-size:13px;margin-top:auto;padding-top:10px}
+.lesson-arrow{display:inline-flex}
+.lesson-arrow .ic{width:15px;height:15px}
+.lesson-actions{display:flex;justify-content:center;margin-top:22px}
+.lesson-actions .btn{padding:11px 26px;border-radius:13px;font-size:14px}
+.lesson-next{display:flex;justify-content:center;margin-top:10px}
+.lesson-next .btn{color:var(--muted)}
+
+/* ---- Payment modal ---- */
+.pay-amount-wrap{margin-bottom:18px}
+.pay-label{font-size:13px;color:var(--muted);margin-bottom:10px;font-weight:500}
+.pay-amount{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
+.pay-cur{font-family:var(--font-display);font-size:26px;font-weight:700;color:var(--green-2)}
+.pay-amount-input{background:none;border:none;outline:none;font-family:var(--font-display);font-size:30px;font-weight:700;color:var(--text);width:100%}
+.pay-amount-input::placeholder{color:var(--muted-2)}
+.pay-methods{display:flex;flex-direction:column;gap:10px}
+.pay-method{display:flex;align-items:center;gap:13px;padding:13px 15px;border-radius:14px;background:var(--surface);border:1px solid var(--border);cursor:pointer;transition:all .15s}
+.pay-method:hover{border-color:var(--border-strong)}
+.pay-method.active{border-color:var(--accent);background:rgba(16,185,129,.08)}
+.pay-method-ic{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:var(--surface-2);color:var(--green-2)}
+.pay-method-ic .ic{width:19px;height:19px}
+.pay-method-label{font-weight:600;font-size:14px}
+.pay-method-sub{font-size:12px;color:var(--muted)}
+.pay-radio{width:22px;height:22px;border-radius:50%;border:2px solid var(--border-strong);display:flex;align-items:center;justify-content:center;color:transparent;transition:all .15s}
+.pay-method.active .pay-radio{background:var(--accent);border-color:var(--accent);color:#fff}
+.pay-radio .ic{width:13px;height:13px}
+.pay-balance{font-size:13px;margin-bottom:16px}
+.pay-balance strong{color:var(--text)}
+.pay-processing,.pay-success{display:flex;flex-direction:column;align-items:center;gap:14px;padding:34px 10px;text-align:center}
+.pay-processing h4,.pay-success h4{font-size:17px;font-weight:600}
+.pay-check{width:64px;height:64px;border-radius:50%;background:var(--green-bg);color:var(--green-2);display:flex;align-items:center;justify-content:center;animation:pop .35s ease}
+.pay-check .ic{width:30px;height:30px}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.spinner{width:44px;height:44px;border-radius:50%;border:3px solid var(--surface-2);border-top-color:var(--accent);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---- Centered sheet on desktop ---- */
+@media (min-width:641px){
+  .sheet-backdrop{align-items:center;padding:24px}
+  .sheet{border-radius:24px;border:1px solid var(--border-strong);border-bottom:1px solid var(--border-strong);max-height:88vh}
+}
+
+/* Lesson done badge */
+.lt-check{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;background:var(--green-bg);color:var(--green-2);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.lt-check .ic{width:16px;height:16px}
+.lesson-thumb{min-height:130px}
